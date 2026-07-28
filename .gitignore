@@ -1,0 +1,30 @@
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Go build output
+bin/
+build/
+dist/
+*.exe
+*.test
+*.out
+
+# Coverage
+coverage.out
+coverage.html
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+
+# Temporary files
+tmp/
+temp/

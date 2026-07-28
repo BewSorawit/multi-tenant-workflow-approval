@@ -9,12 +9,27 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/joho/godotenv"
 )
 
 func main() {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
-	databaseURL := "postgres://postgres:password@localhost:5432/approval?sslmode=disable"
+	if err := godotenv.Load(); err != nil {
+		logger.Warn(".env file not found, using system environment variables")
+	}
+
+	databaseURL := os.Getenv("DATABASE_URL")
+	if databaseURL == "" {
+		logger.Error("DATABASE_URL environment variable is not set")
+		os.Exit(1)
+	}
+
+	appPort := os.Getenv("APP_PORT")
+	if appPort == "" {
+		logger.Error("APP_PORT environment variable is not set")
+		os.Exit(1)
+	}
 
 	dbPool, err := pgxpool.New(context.Background(), databaseURL)
 	if err != nil {
@@ -59,7 +74,7 @@ func main() {
 		})
 	}
 
-	addr := ":8080"
+	addr := ":" + appPort
 
 	logger.Info("server starting", "address", addr)
 
