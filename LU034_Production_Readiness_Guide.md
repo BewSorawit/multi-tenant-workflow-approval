@@ -43,7 +43,7 @@ By the end of LU034, you should be able to explain and demonstrate:
 3. Which network paths are public and private
 4. How Docker packages the application
 5. How CI/CD proves code is safe enough to deploy
-6. How `/health` differs from `/ready`
+6. How `/api/health` differs from `/api/ready`
 7. What happens when the API receives `SIGTERM`
 8. Why graceful shutdown matters during deployment
 
@@ -58,16 +58,16 @@ The roadmap lists **13 topics** for LU034. This guide covers all of them, but wi
 | 1 | Cloud compute, storage and networking | Core | Map API, PostgreSQL, volume, public endpoint and private network | `docs/deployment/cloud-mapping.md` |
 | 2 | CI/CD | Core | Build CI pipeline with format, vet, test, binary build and Docker build gates | `.github/workflows/ci.yml`, `docs/deployment/ci-cd-pipeline.md` |
 | 3 | Linux processes and signals | Core | Inspect API process and handle `SIGTERM` graceful shutdown | `docs/evidence/graceful-shutdown.md` |
-| 4 | API test | Supporting | Smoke test `/health` and `/ready`; later extend to business endpoint | `scripts/smoke-test.sh` |
+| 4 | API test | Supporting | Smoke test `/api/health` and `/api/ready`; later extend to business endpoint | `scripts/smoke-test.sh` |
 | 5 | Code coverage vs test quality | Supporting | Run coverage, but judge tests by critical behavior and failure cases | CI test output or coverage note |
-| 6 | Contract test | Supporting | Verify stable response shape for `/health`, `/ready` and error responses | API/contract test file or checklist |
+| 6 | Contract test | Supporting | Verify stable response shape for `/api/health`, `/api/ready` and error responses | API/contract test file or checklist |
 | 7 | Database testing | Supporting | Verify readiness against real PostgreSQL in Docker/CI | CI PostgreSQL service and readiness evidence |
 | 8 | Deterministic tests | Supporting | Avoid sleeps and external services; use predictable health/readiness checks | Test notes in CI/CD document |
 | 9 | Flaky tests | Supporting | Identify timing/order/network risks in tests | Flaky-test notes in CI/CD document |
 | 10 | Migration testing | Supporting | Add placeholder gate now; run real migration checks when P3 schema exists | CI/CD pipeline note |
 | 11 | Mock, stub and fake | Supporting | Use real PostgreSQL for readiness; use fake dependencies only for unavailable externals | Testing note |
 | 12 | Performance test | Supporting | Keep a basic response-time smoke check; defer load testing to later reliability units | Smoke-test note |
-| 13 | Regression test | Supporting | Preserve `/health`, `/ready`, and database-down readiness behavior | Regression checklist |
+| 13 | Regression test | Supporting | Preserve `/api/health`, `/api/ready`, and database-down readiness behavior | Regression checklist |
 
 For LU034-first, the supporting testing topics are intentionally lightweight. The goal is to connect each testing concept to the deployable shell without prematurely building the full P3 workflow.
 
@@ -78,8 +78,8 @@ For LU034-first, the supporting testing topics are intentionally lightweight. Th
 For LU034-first, build only this minimal system:
 
 - Go API
-- `GET /health`
-- `GET /ready`
+- `GET /api/health`
+- `GET /api/ready`
 - PostgreSQL connection
 - Dockerfile
 - Docker Compose
@@ -149,16 +149,16 @@ Keep it small. LU034 is about operational shape, not business features.
 Create a Go API with two endpoints:
 
 ```text
-GET /health
-GET /ready
+GET /api/health
+GET /api/ready
 ```
 
 Expected behavior:
 
 | Endpoint | Meaning | Expected result |
 |---|---|---|
-| `/health` | Process is alive | `200` if API process is running |
-| `/ready` | App can serve real traffic | `200` if database is reachable, `503` if not |
+| `/api/health` | Process is alive | `200` if API process is running |
+| `/api/ready` | App can serve real traffic | `200` if database is reachable, `503` if not |
 
 Minimum response:
 
@@ -287,15 +287,15 @@ Evidence to capture:
 
 ```bash
 docker compose up -d --build
-curl --fail http://localhost:8080/health
-curl --fail http://localhost:8080/ready
+curl --fail http://localhost:8080/api/health
+curl --fail http://localhost:8080/api/ready
 ```
 
 Then stop the database and prove readiness fails:
 
 ```bash
 docker compose stop db
-curl -i http://localhost:8080/ready
+curl -i http://localhost:8080/api/ready
 ```
 
 Expected:
@@ -421,7 +421,7 @@ Also record how the CI pipeline touches the LU034 supporting testing topics:
 
 | Testing topic | Minimum LU034 implementation |
 |---|---|
-| API test | Test `/health` and `/ready` through HTTP |
+| API test | Test `/api/health` and `/api/ready` through HTTP |
 | Code coverage vs test quality | Save coverage output, then explain which behavior is actually protected |
 | Contract test | Assert response status codes and JSON fields |
 | Database testing | Run readiness against a real PostgreSQL service |
@@ -429,7 +429,7 @@ Also record how the CI pipeline touches the LU034 supporting testing topics:
 | Flaky tests | Note possible timing risks from database startup and container networking |
 | Migration testing | Add the CI stage placeholder; activate when migrations exist |
 | Mock, stub and fake | Prefer real PostgreSQL here; reserve fakes for external email/cloud APIs |
-| Performance test | Add a simple timing observation for `/health` and `/ready` |
+| Performance test | Add a simple timing observation for `/api/health` and `/api/ready` |
 | Regression test | Keep tests for health/readiness behavior so deployment changes do not break them |
 
 ## Step 8 - Add smoke test script
@@ -448,8 +448,8 @@ set -eu
 
 BASE_URL="${BASE_URL:-http://localhost:8080}"
 
-curl --fail "$BASE_URL/health"
-curl --fail "$BASE_URL/ready"
+curl --fail "$BASE_URL/api/health"
+curl --fail "$BASE_URL/api/ready"
 ```
 
 Run:
@@ -621,8 +621,8 @@ Any issue found and how it was fixed.
 LU034 is done when all of these are true:
 
 - [ ] API runs locally
-- [ ] `/health` works
-- [ ] `/ready` checks PostgreSQL
+- [ ] `/api/health` works
+- [ ] `/api/ready` checks PostgreSQL
 - [ ] Docker image builds
 - [ ] Docker Compose starts API and PostgreSQL
 - [ ] Data is stored in a persistent named volume
