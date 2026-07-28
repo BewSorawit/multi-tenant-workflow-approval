@@ -14,14 +14,13 @@ import (
 func main() {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
-	databaseUrl := "postgres://postgres:password@localhost:5432/approval?sslmode=disable"
+	databaseURL := "postgres://postgres:password@localhost:5432/approval?sslmode=disable"
 
-	dbPool, err := pgxpool.New(context.Background(), databaseUrl)
-
+	dbPool, err := pgxpool.New(context.Background(), databaseURL)
 	if err != nil {
 		logger.Error("failed to create database pool", "error", err)
+		os.Exit(1)
 	}
-
 	defer dbPool.Close()
 
 	router := gin.Default()
@@ -34,12 +33,11 @@ func main() {
 			})
 		})
 
-		api.GET("ready", func(c *gin.Context) {
+		api.GET("/ready", func(c *gin.Context) {
 			ctx, cancel := context.WithTimeout(
 				c.Request.Context(),
 				2*time.Second,
 			)
-
 			defer cancel()
 
 			if err := dbPool.Ping(ctx); err != nil {
@@ -50,8 +48,8 @@ func main() {
 
 				c.JSON(http.StatusServiceUnavailable, gin.H{
 					"status": "not_ready",
+					"reason": "database unavailable",
 				})
-
 				return
 			}
 
@@ -63,13 +61,10 @@ func main() {
 
 	addr := ":8080"
 
-	logger.Info(
-		"server starting", "address", addr,
-	)
+	logger.Info("server starting", "address", addr)
 
 	if err := router.Run(addr); err != nil {
 		logger.Error("server stopped", "error", err)
 		os.Exit(1)
 	}
-
 }
