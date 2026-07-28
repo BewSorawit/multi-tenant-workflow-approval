@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/BewSorawit/multi-tenant-workflow-approval/internal/platform"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
@@ -19,19 +20,16 @@ func main() {
 		logger.Warn(".env file not found, using system environment variables")
 	}
 
-	databaseURL := os.Getenv("DATABASE_URL")
-	if databaseURL == "" {
-		logger.Error("DATABASE_URL environment variable is not set")
+	config, err := platform.LoadConfig()
+	if err != nil {
+		logger.Error(
+			"failed to load configuration",
+			"error", err,
+		)
 		os.Exit(1)
 	}
 
-	appPort := os.Getenv("APP_PORT")
-	if appPort == "" {
-		logger.Error("APP_PORT environment variable is not set")
-		os.Exit(1)
-	}
-
-	dbPool, err := pgxpool.New(context.Background(), databaseURL)
+	dbPool, err := pgxpool.New(context.Background(), config.DatabaseURL)
 	if err != nil {
 		logger.Error("failed to create database pool", "error", err)
 		os.Exit(1)
@@ -74,7 +72,7 @@ func main() {
 		})
 	}
 
-	addr := ":" + appPort
+	addr := ":" + config.AppPort
 
 	logger.Info("server starting", "address", addr)
 
