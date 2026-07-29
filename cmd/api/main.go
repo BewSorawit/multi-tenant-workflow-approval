@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/BewSorawit/multi-tenant-workflow-approval/internal/handler"
 	"github.com/BewSorawit/multi-tenant-workflow-approval/internal/platform"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -52,36 +53,9 @@ func main() {
 
 	api := router.Group("/api")
 	{
-		api.GET("/health", func(c *gin.Context) {
-			c.JSON(http.StatusOK, gin.H{
-				"status": "ok",
-			})
-		})
+		api.GET("/health", handler.HealthHandler)
 
-		api.GET("/ready", func(c *gin.Context) {
-			ctx, cancel := context.WithTimeout(
-				c.Request.Context(),
-				2*time.Second,
-			)
-			defer cancel()
-
-			if err := dbPool.Ping(ctx); err != nil {
-				logger.Error(
-					"database readiness check failed",
-					"error", err,
-				)
-
-				c.JSON(http.StatusServiceUnavailable, gin.H{
-					"status": "not_ready",
-					"reason": "database unavailable",
-				})
-				return
-			}
-
-			c.JSON(http.StatusOK, gin.H{
-				"status": "ready",
-			})
-		})
+		api.GET("/ready", handler.ReadinessHandler(dbPool, logger))
 	}
 
 	server := &http.Server{
