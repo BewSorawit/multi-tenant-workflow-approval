@@ -59,7 +59,7 @@ func TestError(t *testing.T) {
 			assert.False(t, resp.Success)
 			assert.Equal(t, tt.code, resp.Error.Code)
 			assert.Equal(t, tt.message, resp.Error.Message)
-			assert.Equal(t, tt.expectedDetails,resp.Error.Details)
+			assert.Equal(t, tt.expectedDetails, resp.Error.Details)
 		})
 	}
 }
