@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestHealHandler(t *testing.T) {
+func TestHealthHandler(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	router := gin.New()
