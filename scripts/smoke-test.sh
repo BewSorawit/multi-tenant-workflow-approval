@@ -9,11 +9,11 @@ echo "Waiting for API.."
 sleep 5
 
 echo "Checking health..."
-curl -f http://localhost:8080/api/health
+curl -f http://localhost:8081/api/health
 
 echo
 echo "Checking readiness..."
-curl -f http://localhost:8080/api/ready
+curl -f http://localhost:8081/api/ready
 
 echo
 echo "Smoke Test Passed"
