@@ -1,0 +1,16 @@
+services:
+  api:
+    build:
+      context: .
+    image: ${APP_IMAGE:-multi-tenant-workflow-approval:prod}
+    env_file:
+      - ${APP_ENV_FILE:-.env.prod}
+    ports:
+      - "${APP_HOST_PORT:-8080}:8080"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/api/health >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
